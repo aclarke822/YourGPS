@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:layout_width="39.5dp"
+    android:layout_height="39.5dp"
+    android:longClickable="true"
+    android:clickable="true"
+    android:layout_gravity="bottom|right"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_marginBottom="@dimen/custom_location_button_bottom"
+    android:layout_marginRight="@dimen/custom_location_button_right">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/location_svg_background_imageview_description"
+        android:src="@drawable/frame"
+        android:clickable="true"
+        android:longClickable="true" />
+
+    <ImageView
+        android:id="@+id/locationButton"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/location_svg_imageview_description"
+        android:src="@drawable/ic_custom_location_button1"
+        android:longClickable="true"
+        android:clickable="true"
+        android:layout_alignParentStart="true"
+        android:padding="11dp" />
+
+</RelativeLayout>

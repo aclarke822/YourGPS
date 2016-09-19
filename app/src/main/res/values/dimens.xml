@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="search_view_left">15dp</dimen>
+    <dimen name="search_view_top">30dp</dimen>
+    <dimen name="search_view_right">15dp</dimen>
+    <dimen name="custom_location_button_bottom">140dp</dimen>
+    <dimen name="custom_location_button_right">11dp</dimen>
+</resources>

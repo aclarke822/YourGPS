@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MainActivity">
+
+    <group android:id="@+id/group1" android:checkableBehavior="none">
+    </group>
+
+    <group android:id="@+id/group2" android:checkableBehavior="none">
+        <item
+            android:id="@+id/action_clear_map"
+            android:icon="@drawable/ic_clear_map"
+            android:title="@string/clear_map"
+            android:checkable="false"/>
+    </group>
+
+    <group android:id="@+id/group3">
+        <item
+            android:id="@+id/action_mock"
+            android:icon="@drawable/ic_mock_push"
+            android:title="@string/mock_push"
+            android:checkable="false" />
+        <item
+            android:id="@+id/toggle_mock"
+            android:icon="@drawable/ic_toggle_mock"
+            android:title="@string/toggle_mock"/>
+        <item
+            android:id="@+id/action_steady_random_mock"
+            android:icon="@drawable/ic_steady_random_mock"
+            android:title="@string/steady_random_mock"
+            android:checkable="false" />
+    </group>
+
+    <group android:id="@+id/group4">
+        <item
+            android:id="@+id/toggle_traffic"
+            android:icon="@drawable/ic_traffic"
+            android:title="@string/toggle_traffic"/>
+    </group>
+
+    <group android:id="@+id/group5" android:checkableBehavior="single" >
+        <item
+            android:id="@+id/satellite"
+            android:icon="@drawable/ic_satellite"
+            android:title="@string/satellite"/>
+
+        <item
+            android:id="@+id/hybrid"
+            android:icon="@drawable/ic_hybrid"
+            android:title="@string/hybrid"/>
+
+        <item
+            android:id="@+id/terrain"
+            android:icon="@drawable/ic_terrain"
+            android:title="@string/terrain"/>
+    </group>
+
+    <group android:id="@+id/group6">
+        <item
+            android:id="@+id/action_open_paths"
+            android:icon="@drawable/ic_paths"
+            android:title="@string/paths"
+            android:checkable="false"/>
+        <item
+            android:id="@+id/action_open_radius"
+            android:icon="@drawable/ic_radius"
+            android:title="@string/radius"
+            android:checkable="false"/>
+    </group>
+
+    <group android:id="@+id/group7" android:checkableBehavior="none">
+        <item
+            android:id="@+id/action_settings"
+            android:icon="@drawable/ic_settings"
+            android:title="@string/Settings"
+            android:checkable="false" />
+        <item
+            android:title="@string/blank"
+            android:checkable="false" />
+        <item
+            android:title="@string/blank"
+            android:checkable="false" />
+        <item
+            android:title="@string/blank"
+            android:checkable="false" />
+        <item
+            android:title="@string/blank"
+            android:checkable="false" />
+        <item
+            android:title="@string/blank"
+            android:checkable="false" />
+    </group>
+
+</menu>

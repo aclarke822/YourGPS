@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="75dp"
+    android:background="@color/nav.header"
+    android:gravity="bottom"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:weightSum="1">
+
+    <ImageView
+        android:id="@+id/left_header_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:paddingTop="20dp"
+        android:src="@drawable/ic_navigation_icon" />
+
+    <TextView
+        android:id="@+id/left_header_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:paddingLeft="20dp"
+        android:paddingTop="20dp"
+        android:text="Your GPS"
+        android:textColor="@color/black" />
+
+</LinearLayout>
