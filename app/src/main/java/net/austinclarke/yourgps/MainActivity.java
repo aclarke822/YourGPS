@@ -64,14 +64,15 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
@@ -87,7 +88,9 @@ public class MainActivity extends AppCompatActivity implements
         LocationListener,
         View.OnClickListener,
         View.OnLongClickListener,
-        View.OnTouchListener {
+        View.OnTouchListener,
+        Cloneable,
+        Serializable {
 
     private static final LatLng southWestBounds = new LatLng(-180, -90);
     private static final LatLng northEastBounds = new LatLng(180, 90);
@@ -106,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements
     ArrayList<ArrayList<Location>> pathList = new ArrayList<>();
     ArrayList<String> pathNameList = new ArrayList<>();
     ArrayList<Integer> pathSpeed = new ArrayList<>();
-    ArrayList<Integer> pathRandomness = new ArrayList<>();
+    ArrayList<Integer> pathWander = new ArrayList<>();
     ArrayList<ArrayList<String>> locationNameList = new ArrayList<>();
     ArrayList<ArrayList<Integer>> locationWaitTime = new ArrayList<>();
     ArrayList<Integer> totalLocationsInPathList = new ArrayList<>();
@@ -215,8 +218,7 @@ public class MainActivity extends AppCompatActivity implements
 
             //for (int i = 0 ; i < 5;) {}
 
-
-            //floatingSearchView.swapSuggestions(search);
+            floatingSearchView.swapSuggestions(search);
             //showShortToast(Integer.toString(places.getCount()));
 
             places.release();
@@ -548,7 +550,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
 
-
     private void pathUpdateIntervalDialog() {
         if (pathSelected > -1 && pathSelected < totalPaths) {
             navigationViewRight.getMenu().findItem(1080).setChecked(true);
@@ -671,12 +672,12 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private void pathRandomnessDialog() {
+    private void pathWanderDialog() {
         if (pathSelected > -1 && pathSelected < totalPaths) {
             navigationViewRight.getMenu().findItem(1060).setChecked(true);
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Wander (m)");
-            builder.setIcon(R.drawable.ic_randomness);
+            builder.setIcon(R.drawable.ic_wander);
 
             // Set up the input
             final EditText input = new EditText(this);
@@ -689,7 +690,7 @@ public class MainActivity extends AppCompatActivity implements
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     String text = input.getText().toString();
-                    setRandomness(Integer.parseInt(text));
+                    setWander(Integer.parseInt(text));
                     navigationViewRight.getMenu().findItem(1060).setChecked(false);
                 }
             });
@@ -708,8 +709,8 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private void setRandomness(int i) {
-        pathRandomness.set(pathSelected, i);
+    private void setWander(int i) {
+        pathWander.set(pathSelected, i);
         createEditPathMenu();
     }
 
@@ -805,17 +806,17 @@ public class MainActivity extends AppCompatActivity implements
     private void movePathDown() {
         if ((pathSelected > -1) && pathSelected + 1 < totalPaths) {
             ArrayList<Location> tempPath = pathList.get(pathSelected);
-            int tempRandomness = pathRandomness.get(pathSelected);
+            int tempWander = pathWander.get(pathSelected);
             String tempName = pathNameList.get(pathSelected);
 
             pathList.set(pathSelected, pathList.get(pathSelected + 1));
             pathList.set(pathSelected + 1, tempPath);
 
             pathUpdateInterval.set(pathSelected, pathUpdateInterval.get(pathSelected + 1));
-            pathUpdateInterval.set(pathSelected + 1, tempRandomness);
+            pathUpdateInterval.set(pathSelected + 1, tempWander);
 
-            pathRandomness.set(pathSelected, pathRandomness.get(pathSelected + 1));
-            pathRandomness.set(pathSelected + 1, tempRandomness);
+            pathWander.set(pathSelected, pathWander.get(pathSelected + 1));
+            pathWander.set(pathSelected + 1, tempWander);
 
             pathNameList.set(pathSelected, pathNameList.get(pathSelected + 1));
             pathNameList.set(pathSelected + 1, tempName);
@@ -836,17 +837,17 @@ public class MainActivity extends AppCompatActivity implements
     private void movePathUp() {
         if ((pathSelected > 0)) {
             ArrayList<Location> tempPath = pathList.get(pathSelected);
-            int tempRandomness = pathRandomness.get(pathSelected);
+            int tempWander = pathWander.get(pathSelected);
             String tempName = pathNameList.get(pathSelected);
 
             pathList.set(pathSelected, pathList.get(pathSelected - 1));
             pathList.set(pathSelected - 1, tempPath);
 
             pathUpdateInterval.set(pathSelected, pathUpdateInterval.get(pathSelected - 1));
-            pathUpdateInterval.set(pathSelected - 1, tempRandomness);
+            pathUpdateInterval.set(pathSelected - 1, tempWander);
 
-            pathRandomness.set(pathSelected, pathRandomness.get(pathSelected - 1));
-            pathRandomness.set(pathSelected - 1, tempRandomness);
+            pathWander.set(pathSelected, pathWander.get(pathSelected - 1));
+            pathWander.set(pathSelected - 1, tempWander);
 
             pathNameList.set(pathSelected, pathNameList.get(pathSelected - 1));
             pathNameList.set(pathSelected - 1, tempName);
@@ -922,13 +923,17 @@ public class MainActivity extends AppCompatActivity implements
         pathSelected = menuItemNumber - 100;
         if (menuItem.isChecked()) {
             createLocationMenu();
-            plotPathMarkers();
+
+            if (totalLocationsInPathList.get(pathSelected) > 1) {
+                plotPathMarkers();
+                getNumberOfMidpoints(pathList.get(pathSelected));
+            }
             if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
                 createEditLocationMenu();
-                getNumberOfMidpoints(pathList.get(pathSelected));
             }
         } else {
             createEditPathMenu();
+            drawerLayout.openDrawer(GravityCompat.END);
         }
     }
 
@@ -975,6 +980,14 @@ public class MainActivity extends AppCompatActivity implements
 
         pathList.remove(pathSelected);
         pathNameList.remove(pathSelected);
+        pathWander.remove(pathSelected);
+        pathSpeed.remove(pathSelected);
+        pathUpdateInterval.remove(pathSelected);
+        totalLocationsInPathList.remove(pathSelected);
+
+        locationNameList.remove(pathSelected);
+        locationWaitTime.remove(pathSelected);
+
         pathSelected = -1;
         totalPaths--;
         createPathMenu();
@@ -986,12 +999,14 @@ public class MainActivity extends AppCompatActivity implements
         if (totalPaths < 100) {
             pathList.add(new ArrayList<Location>());
             pathNameList.add(Integer.toString(r.nextInt()));
+            pathWander.add(0);
+            pathSpeed.add(1);
+            pathUpdateInterval.add(100);
+            totalLocationsInPathList.add(0);
+
             locationNameList.add(new ArrayList<String>());
             locationWaitTime.add(new ArrayList<Integer>());
-            totalLocationsInPathList.add(0);
-            pathRandomness.add(0);
-            pathUpdateInterval.add(100);
-            pathSpeed.add(1);
+
             totalPaths++;
         } else {
             showShortToast("Too many paths!");
@@ -1009,7 +1024,6 @@ public class MainActivity extends AppCompatActivity implements
             showShortToast("No location selected!");
             return;
         }
-
 
 
         pathList.get(pathSelected).remove(locationSelected);
@@ -1147,13 +1161,13 @@ public class MainActivity extends AppCompatActivity implements
         menu.add(1, 1030, 1030, "Move Up").setIcon(R.drawable.ic_arrow_up);
         menu.add(1, 1040, 1040, "Move Down").setIcon(R.drawable.ic_arrow_down);
         menu.add(1, 1050, 1050, "Rename").setIcon(R.drawable.ic_rename);
-        menu.add(1, 1060, 1060, "Wander (m)").setIcon(R.drawable.ic_randomness);
+        menu.add(1, 1060, 1060, "Wander (m)").setIcon(R.drawable.ic_wander);
         menu.add(1, 1070, 1070, "Speed (m/s)").setIcon(R.drawable.ic_speed);
         menu.add(1, 1080, 1080, "Update (ms)").setIcon(R.drawable.ic_update);
         menu.setGroupCheckable(1, false, false);
         if (pathSelected > -1) {
             menu.add(1, 1051, 1051, "    " + pathNameList.get(pathSelected));
-            menu.add(1, 1061, 1061, "    " + Integer.toString(pathRandomness.get(pathSelected)));
+            menu.add(1, 1061, 1061, "    " + Integer.toString(pathWander.get(pathSelected)));
             menu.add(1, 1071, 1071, "    " + Integer.toString(pathSpeed.get(pathSelected)));
             menu.add(1, 1081, 1081, "    " + Integer.toString(pathUpdateInterval.get(pathSelected)));
         }
@@ -1226,7 +1240,7 @@ public class MainActivity extends AppCompatActivity implements
             /** Called when a drawer has settled in a completely closed state. */
             public void onDrawerClosed(View view) {
                 super.onDrawerClosed(view);
-                if (!drawerLayout.isDrawerOpen(GravityCompat.START)){
+                if (!drawerLayout.isDrawerOpen(GravityCompat.START)) {
                     drawerLayout.closeDrawer(GravityCompat.END);
                 }
             }
@@ -1234,7 +1248,7 @@ public class MainActivity extends AppCompatActivity implements
             /** Called when a drawer has settled in a completely open state. */
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
-                if (!drawerLayout.isDrawerOpen(GravityCompat.START)){
+                if (!drawerLayout.isDrawerOpen(GravityCompat.START)) {
                     drawerLayout.closeDrawer(GravityCompat.END);
                 }
             }
@@ -1264,7 +1278,6 @@ public class MainActivity extends AppCompatActivity implements
                     public void onMenuClosed() {
                     }
                 });
-
 
 
         navigationViewLeft.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
@@ -1411,9 +1424,9 @@ public class MainActivity extends AppCompatActivity implements
                     case 1051:
                         renamePathDialog();
                         break;
-                    case 1060://Path randomness
+                    case 1060://Path wander
                     case 1061:
-                        pathRandomnessDialog();
+                        pathWanderDialog();
                         break;
                     case 1070://Path speed
                     case 1071:
@@ -1924,7 +1937,7 @@ public class MainActivity extends AppCompatActivity implements
         return null;
     }
 
-    public void savePreferences(){
+    public void savePreferences() {
         SharedPreferences.Editor editor = preferences.edit();
         ArrayList<ArrayList<String>> pathLatitudeAsString = new ArrayList<>();
         ArrayList<ArrayList<String>> pathLongitudeAsString = new ArrayList<>();
@@ -1933,19 +1946,19 @@ public class MainActivity extends AppCompatActivity implements
         editor.putString("last_latitude", Double.toString(currentUserLocation.getLatitude()));
         editor.putString("last_longitude", Double.toString(currentUserLocation.getLongitude()));
 
-        for (int i = 0 ; i < pathList.size(); i++){
+        for (int i = 0; i < pathList.size(); i++) {
             int a = i + 1000;
 
             pathLatitudeAsString.add(new ArrayList<String>());
             pathLongitudeAsString.add(new ArrayList<String>());
 
-            editor.putString("pathname" + Integer.toString(a),pathNameList.get(i));
+            editor.putString("pathname" + Integer.toString(a), pathNameList.get(i));
             editor.putInt("pathspeed" + Integer.toString(a), pathSpeed.get(i));
-            editor.putInt("pathrandomness" + Integer.toString(a), pathRandomness.get(i));
+            editor.putInt("pathwander" + Integer.toString(a), pathWander.get(i));
             editor.putInt("totallocationsinpathlist" + Integer.toString(a), totalLocationsInPathList.get(i));
             editor.putInt("pathupdateinterval" + Integer.toString(a), pathUpdateInterval.get(i));
 
-            for (int j = 0 ; j < pathList.get(i).size(); j++){
+            for (int j = 0; j < pathList.get(i).size(); j++) {
                 int b = j + 1000;
                 pathLatitudeAsString.get(i).add(Double.toString(pathList.get(i).get(j).getLatitude()));
                 pathLongitudeAsString.get(i).add(Double.toString(pathList.get(i).get(j).getLongitude()));
@@ -1953,7 +1966,7 @@ public class MainActivity extends AppCompatActivity implements
                 editor.putString("latitude" + Integer.toString(a) + "," + Integer.toString(b), pathLatitudeAsString.get(i).get(j));
                 editor.putString("longitude" + Integer.toString(a) + "," + Integer.toString(b), pathLongitudeAsString.get(i).get(j));
                 editor.putInt("locationwaittime" + Integer.toString(a) + "," + Integer.toString(b), locationWaitTime.get(i).get(j));
-                editor.putString("locationname" + Integer.toString(a) + "," + Integer.toString(b),locationNameList.get(i).get(j));
+                editor.putString("locationname" + Integer.toString(a) + "," + Integer.toString(b), locationNameList.get(i).get(j));
 
             }
 
@@ -1999,7 +2012,7 @@ public class MainActivity extends AppCompatActivity implements
 
             pathNameList.add(preferences.getString("pathname" + Integer.toString(a), "Blank"));
             pathSpeed.add(preferences.getInt("pathspeed" + Integer.toString(a), 1));
-            pathRandomness.add(preferences.getInt("pathrandomness" + Integer.toString(a), 0));
+            pathWander.add(preferences.getInt("pathwander" + Integer.toString(a), 0));
             totalLocationsInPathList.add(preferences.getInt("totallocationsinpathlist" + Integer.toString(a), 0));
             pathUpdateInterval.add(preferences.getInt("pathupdateinterval" + Integer.toString(a), 100));
 
@@ -2009,7 +2022,7 @@ public class MainActivity extends AppCompatActivity implements
                 pathLatitudeAsString.get(i).add(preferences.getString("latitude" + Integer.toString(a) + "," + Integer.toString(b), "37.422535"));
                 pathLongitudeAsString.get(i).add(preferences.getString("longitude" + Integer.toString(a) + "," + Integer.toString(b), "-122.084804"));
                 locationWaitTime.get(i).add(preferences.getInt("locationwaittime" + Integer.toString(a) + "," + Integer.toString(b), 0));
-                locationNameList.get(i).add(preferences.getString("locationname" + Integer.toString(a) + "," + Integer.toString(b),"blank"));
+                locationNameList.get(i).add(preferences.getString("locationname" + Integer.toString(a) + "," + Integer.toString(b), "blank"));
 
                 Location location = getRandomLocation();
 
@@ -2052,17 +2065,17 @@ public class MainActivity extends AppCompatActivity implements
 
         float angle = (float) Math.toDegrees(Math.atan2(lat2 - lat1, lon2 - lon1));
 
-        if(angle < 0){
+        if (angle < 0) {
             angle += 360;
         }
 
         return angle;
     }
 
-    public double getTotalDistance (ArrayList<Location> path){
+    public double getTotalDistance(ArrayList<Location> path) {
         double distance = 0;
         Location location1 = path.get(0);
-        for (int i = 1 ; i < path.size() ; i++){
+        for (int i = 1; i < path.size(); i++) {
             Location location2 = path.get(i);
             distance += getDistance(location1, location2);
             location1 = location2;
@@ -2070,12 +2083,10 @@ public class MainActivity extends AppCompatActivity implements
         return distance;
     }
 
-    public ArrayList<Integer> getNumberOfMidpoints (ArrayList<Location> path){
+    public ArrayList<Long> getNumberOfMidpoints(ArrayList<Location> path) {
         double distance;
         double time;
-        int midpoints;
-        Location location1;
-        Location location2;
+        long midpoints;
 
         double m1;
         double m2;
@@ -2084,15 +2095,32 @@ public class MainActivity extends AppCompatActivity implements
         double b1;
         double b2;
 
-        ArrayList<Integer> numberOfMidpoints = new ArrayList<>();
+        ArrayList<Long> numberOfMidpoints = new ArrayList<>();
         ArrayList<Location> finalPathList = new ArrayList<>();
 
-        location1 = path.get(0);
-        for (int i = 1 ; i < path.size() ; i++){
-            location2 = path.get(i);
+        Location location1 = new Location("final");
+        Location location2 = new Location("final");
+        Location locationA = new Location("final");
+        Location locationB = new Location("final");
+
+        location1.set(path.get(0));
+        addCircle(location1);
+        location1 = addWander(location1);
+        finalPathList.add(location1);
+        locationA.set(location1);
+        for (int i = 1; i < path.size(); i++) {
+
+
+
+            location2.set(path.get(i));
+            addCircle(location2);
             distance = getDistance(location1, location2);
+            showShortToast(Double.toString(distance));
+            distance = (double) location1.distanceTo(location2);
+            showShortToast(Double.toString(distance));
             time = distance / pathSpeed.get(pathSelected);
-            midpoints = (int) (long) Math.round(time / (pathUpdateInterval.get(pathSelected)/ 1000));
+            midpoints = Math.round(time / ((double) pathUpdateInterval.get(pathSelected) / 1000));
+            numberOfMidpoints.add(midpoints);
 
             deltaLat = location2.getLatitude() - location1.getLatitude();
             deltaLon = location2.getLongitude() - location1.getLongitude();
@@ -2100,38 +2128,72 @@ public class MainActivity extends AppCompatActivity implements
             m2 = deltaLon / midpoints;
             b1 = location1.getLatitude();
             b2 = location1.getLongitude();
-            showShortToast(Double.toString((deltaLat)));
-            showShortToast(Double.toString(midpoints));
-            showShortToast(Double.toString(m1));
 
-            Location locationa = location1;
-            for (int j = 1; j < midpoints ; j++) {
-                finalPathList.add(locationa);
-                Location locationb = new Location(Integer.toString(j));
-                locationb.setLatitude(j*m1 + b1);
-                locationb.setLongitude(j*m2 + b2);
 
-                locationb.setAccuracy(pathRandomness.get(pathSelected));
-                locationb.setSpeed((float) getDistance(locationa, locationb) / (pathUpdateInterval.get(pathSelected) / 1000));
-                locationb.setBearing(getBearing(locationa, locationb));
+            location1.set(location2);
+            location2.set(addWander(location2));
+            for (int j = 1; j < midpoints; j++) {
+                locationB = new Location(Integer.toString(j));
+                locationB.setLatitude(j * m1 + b1);
+                locationB.setLongitude(j * m2 + b2);
+                locationB.setAccuracy(pathWander.get(pathSelected));
+                addCircle(locationB);
+                locationB.set(addWander(locationB));
+                locationB.setSpeed((float) getDistance(locationA, locationB) / (pathUpdateInterval.get(pathSelected) / 1000));
+                locationB.setBearing(getBearing(locationA, locationB));
+                finalPathList.add(locationB);
+                addLine(locationA, locationB);
 
-                Polyline line = getMap().addPolyline(new PolylineOptions()
-                        .add(getLatLngFromLocation(locationa), getLatLngFromLocation(locationb))
-                        .width(5)
-                        .color(Color.RED));
-
-                locationa = locationb;
+                locationA.set(locationB);
             }
 
 
+            addLine(locationB, location2);
+            finalPathList.add(location2);
+            locationA.set(location2);
 
-
-
-
-            numberOfMidpoints.add(midpoints);
-            location1 = location2;
         }
+
+        addCircle(location1);
         finalPathList.add(location1);
+
         return numberOfMidpoints;
+    }
+
+    public void addCircle(Location location) {
+        getMap().addCircle(new CircleOptions()
+                .center(getLatLngFromLocation(location))
+                .radius(pathWander.get(pathSelected))
+                .strokeColor(Color.BLUE)
+                .fillColor(Color.TRANSPARENT));
+
+    }
+
+    public void addLine(Location location1, Location location2) {
+        getMap().addPolyline(new PolylineOptions()
+                .add(getLatLngFromLocation(location1), getLatLngFromLocation(location2))
+                .width(5)
+                .color(Color.RED));
+    }
+
+    public Location addWander(Location pathLocation) {
+        Location location = new Location("wander");
+        location.set(pathLocation);
+        Random r = new Random();
+        double latitude1 = Math.toRadians(location.getLatitude());
+        double longitutde1 = Math.toRadians(location.getLongitude());
+        int wander = pathWander.get(pathSelected);
+        double wanderRadians = (double) wander / 6378137;
+        double rAngle = 2 * Math.PI * r.nextDouble();
+        double rDistance = wanderRadians * r.nextDouble();
+
+        //Courtesy of http://williams.best.vwh.net/avform.htm#LL
+        double latitude2 = Math.asin(Math.sin(latitude1) * Math.cos(rDistance) + Math.cos(latitude1) * Math.sin(rDistance) * Math.cos(rAngle));
+        double dlongitude = Math.atan2(Math.sin(rAngle) * Math.sin(rDistance) * Math.cos(latitude1), Math.cos(rDistance) - Math.sin(latitude1) * Math.sin(latitude2));
+        double longitude2 = longitutde1 - dlongitude + Math.PI - 2 * Math.PI * Math.floor((longitutde1 - dlongitude + Math.PI) / (2 * Math.PI)) - Math.PI;
+
+        location.setLatitude(Math.toDegrees(latitude2));
+        location.setLongitude(Math.toDegrees(longitude2));
+        return location;
     }
 }
