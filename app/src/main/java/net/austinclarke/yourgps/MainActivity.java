@@ -2105,13 +2105,9 @@ public class MainActivity extends AppCompatActivity implements
 
         location1.set(path.get(0));
         addCircle(location1);
-        location1 = addWander(location1);
-        finalPathList.add(location1);
-        locationA.set(location1);
+        locationA.set(addWander(location1));
+        finalPathList.add(locationA);
         for (int i = 1; i < path.size(); i++) {
-
-
-
             location2.set(path.get(i));
             addCircle(location2);
             distance = getDistance(location1, location2);
@@ -2155,7 +2151,7 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         addCircle(location1);
-        finalPathList.add(location1);
+        //finalPathList.add(locationA);
 
         return numberOfMidpoints;
     }
